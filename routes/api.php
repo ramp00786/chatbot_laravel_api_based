@@ -18,6 +18,8 @@ Route::middleware(['api.key'])->group(function () {
         
         // Messages
         Route::post('/messages', [ChatbotApiController::class, 'saveMessage']);
+
+        Route::post('/log', [ChatbotApiController::class, 'logEvent']);
     });
 });
 

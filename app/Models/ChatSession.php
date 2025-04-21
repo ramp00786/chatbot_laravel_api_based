@@ -29,6 +29,14 @@ class ChatSession extends Model
         'ended_at' => 'datetime',
     ];
 
+
+    // Define the relationship to User
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+
     /**
      * Get the API key associated with this session
      */

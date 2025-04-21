@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 use Stevebauman\Location\Facades\Location;
+use Illuminate\Support\Facades\DB;
 
 class ChatbotApiController extends Controller
 {
@@ -148,5 +149,28 @@ class ChatbotApiController extends Controller
         } else {
             return 'Other';
         }
+    }
+
+    public function logEvent(Request $request)
+    {
+        $request->validate([
+            'session_id' => 'required',
+            'sender' => 'required|in:bot,user',
+            'message' => 'required|string',
+            'type' => 'nullable|string',
+            'parent_id' => 'nullable|integer'
+        ]);
+
+        DB::table('chat_logs')->insert([
+            'session_id' => $request->session_id,
+            'sender' => $request->sender,
+            'message' => $request->message,
+            'type' => $request->type,
+            'parent_id' => $request->parent_id,
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }

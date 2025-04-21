@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\ChatSession;
-use App\Models\ChatMessage;
 use App\Models\ApiKey;
+use App\Models\ChatLog;
+use App\Models\ChatMessage;
+use App\Models\ChatSession;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 
 class DashboardController extends Controller
 {
     public function index()
     {
+
+        // DB::table('chat_logs')->delete();
+
         $user = auth()->user();
         
         // Basic Stats
@@ -60,5 +64,28 @@ class DashboardController extends Controller
             ->get();
 
         return view('admin.dashboard', compact('stats', 'locations', 'devices', 'recentSessions'));
+    }
+
+    // public function showSessionHistory($session_id)
+    // {
+    //     $logs = DB::table('chat_logs')
+    //         ->where('session_id', $session_id)
+    //         ->orderBy('created_at')
+    //         ->get();
+
+    //     // dd($logs);
+    //     return view('admin.chat_session', compact('logs'));
+    // }
+
+    public function showSessionHistory($session_id)
+    {
+        $logs = ChatLog::where('session_id', $session_id)
+            ->orderBy('created_at')
+            ->get();
+
+        $session = ChatSession::with('user') // assuming you have a relationship
+            ->findOrFail($session_id);
+
+        return view('admin.chat_session', compact('logs', 'session'));
     }
 }

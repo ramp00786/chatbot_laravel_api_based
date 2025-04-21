@@ -45,6 +45,8 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'chatbot'])->na
 
 Route::middleware('auth')->group(function() {
     Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/dashboard/{session_id}', [App\Http\Controllers\Admin\DashboardController::class, 'showSessionHistory'])->name('admin.dashboard.session_id');
+
 
     // API Key Management
     Route::get('/api-keys', [App\Http\Controllers\Admin\ApiKeyController::class, 'index'])->name('admin.api-keys');

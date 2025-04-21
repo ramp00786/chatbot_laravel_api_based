@@ -9,7 +9,6 @@ class ChatbotWidget {
         this.questionHistory = []; // Track question navigation
         this.isMinimized = false;
         this.pendingNextQuestions = null;
-        this.question_answer_after_input = null;
         this.init();
     }
 
@@ -25,7 +24,6 @@ class ChatbotWidget {
 
     bindUnloadEvents() {
         const sendLogoutBeacon = () => {
-            this.logEvent('user', question.question, 'window_closed');
             if (this.sessionId) {
                 const data = new Blob([JSON.stringify({
                     session_id: this.sessionId,
@@ -330,8 +328,16 @@ class ChatbotWidget {
 
     displayQuestions(questions) {
         const container = document.getElementById('quick-questions');
-        container.innerHTML = '';     
-      
+        container.innerHTML = '';
+        
+        // Always show back button except for initial questions
+        // if (this.questionHistory.length > 0 || (this.currentQuestions && this.currentQuestions.some(q => q.is_final))) {
+        //     const backBtn = document.createElement('button');
+        //     backBtn.className = 'question-btn btn btn-outline-secondary mb-2';
+        //     backBtn.innerHTML = '<i class="fas fa-arrow-left me-2"></i> Back';
+        //     backBtn.addEventListener('click', () => this.goBack());
+        //     container.appendChild(backBtn);
+        // }
 
         if (this.questionHistory.length > 0) {
             const backBtn = document.createElement('button');
@@ -341,18 +347,15 @@ class ChatbotWidget {
             container.appendChild(backBtn);
         }
         
-        // console.log('display:', questions);
+        console.log('display:', questions);
 
-        if (typeof questions !== 'undefined'){
-            this.logEvent('bot', JSON.stringify(questions), 'list');
-            questions.forEach(question => {
-                const btn = document.createElement('button');
-                btn.className = 'question-btn btn btn-outline-primary';
-                btn.textContent = question.question;
-                btn.addEventListener('click', () => this.handleQuestionClick(question));
-                container.appendChild(btn);
-            });
-        }
+        questions.forEach(question => {
+            const btn = document.createElement('button');
+            btn.className = 'question-btn btn btn-outline-primary';
+            btn.textContent = question.question;
+            btn.addEventListener('click', () => this.handleQuestionClick(question));
+            container.appendChild(btn);
+        });
         
         // Show restart button in header
         document.getElementById('chatbot-restart').style.display = 'inline-block';
@@ -363,7 +366,6 @@ class ChatbotWidget {
     }
 
     goBack() {
-        this.logEvent('user', "Back Button", "clicked");
         if (this.questionHistory.length > 0) {
             const previousQuestions = this.questionHistory.pop();
             this.currentQuestions = previousQuestions;
@@ -475,41 +477,68 @@ class ChatbotWidget {
         }
     }
 
-    
+    // handleQuestionClick(question) {
+
+    //     this.addMessage(question.question, 'user');
+    //     // Add user message only if not waiting for input
+    //     if (question.enable_input) {
+    //         // Show bot asking the input
+    //         this.addMessage(question.question, 'bot');
+    //     } else {
+    //         this.addMessage(question.question, 'user');
+    //     }
+        
+    //     // Save current questions to history before displaying new ones
+    //     // if (!question.is_final) {
+    //     //     this.questionHistory.push(this.currentQuestions);
+    //     // }
+    //     this.questionHistory.push(this.currentQuestions);
+        
+    //     if(question.is_final) {
+    //         this.addMessage(question.answer, 'bot');
+    //         this.currentQuestions = null;
+    //         document.getElementById('quick-questions').innerHTML = '';
+            
+    //         // Show back button even for final answers
+    //         const backBtn = document.createElement('button');
+    //         backBtn.className = 'question-btn btn btn-outline-secondary mb-2';
+    //         backBtn.innerHTML = '<i class="fas fa-arrow-left me-2"></i> Back';
+    //         backBtn.addEventListener('click', () => this.goBack());
+    //         document.getElementById('quick-questions').appendChild(backBtn);
+    //     } else if (question.enable_input) {
+    //         this.pendingNextQuestions = question.children;
+    //     }else {
+    //         this.currentQuestions = question.children;
+    //         this.displayQuestions(question.children);
+    //     }
+        
+    //     // Show input only if question has input enabled
+    //     const inputEnabled = question.enable_input || false;
+    //     document.getElementById('user-input').style.display = inputEnabled ? 'block' : 'none';
+    //     document.getElementById('send-btn').style.display = inputEnabled ? 'block' : 'none';
+        
+    //     // Focus input if enabled
+    //     if (inputEnabled) {
+    //         document.getElementById('user-input').focus();
+    //     }
+    // }
 
     handleQuestionClick(question) {
-        if(question.answer){
-            this.question_answer_after_input = question.answer;
-        }
-        // question_answer_after_input
         // Save current questions to history
         this.questionHistory.push(this.currentQuestions);
     
         // If input is required, show bot message instead of user
         if (question.enable_input) {
             this.addMessage(question.question, 'bot');
-            this.logEvent('user', question.question, 'selected');
-            this.logEvent('bot', question.question, 'input_for');
-            
             this.pendingNextQuestions = question.children;
     
             // Clear quick questions so only input is visible
             document.getElementById('quick-questions').innerHTML = '';
-
-            const backBtn = document.createElement('button');
-            backBtn.className = 'question-btn btn btn-outline-secondary mb-2';
-            backBtn.innerHTML = '<i class="fas fa-arrow-left me-2"></i> Back';
-            backBtn.addEventListener('click', () => this.goBack());
-            document.getElementById('quick-questions').appendChild(backBtn);
-
         } else {
-           
             this.addMessage(question.question, 'user');
-            this.logEvent('user', question.question, 'selected');
     
             if (question.is_final) {
                 this.addMessage(question.answer, 'bot');
-                this.logEvent('bot', question.answer, 'final_answer');
                 this.currentQuestions = null;
                 document.getElementById('quick-questions').innerHTML = '';
     
@@ -542,8 +571,6 @@ class ChatbotWidget {
         if(!message) return;
         
         this.addMessage(message, 'user');
-        this.logEvent('user', message, 'input');
-
         input.value = '';
         
         try {
@@ -564,10 +591,7 @@ class ChatbotWidget {
             }
             
             const data = await response.json();
-
-
-            // console.log(this.question_answer_after_input);
-
+            // console.log(data.message);
             // this.addMessage(data.message, 'bot');
 
             // Check if there are pending next questions
@@ -577,30 +601,13 @@ class ChatbotWidget {
                 this.pendingNextQuestions = null;
             } else {
                 this.pendingNextQuestions = null;
-                if(this.question_answer_after_input){
-                    this.addMessage(this.question_answer_after_input || "Chat message saved successfully", 'bot');
-                    this.logEvent('bot', this.question_answer_after_input || "Chat message saved successfully", 'final_answer');
-                }
-                else{
-                    this.addMessage(data.message || "Chat message saved successfully", 'bot');
-                    this.logEvent('bot', data.message || "Chat message saved successfully", 'final_answer');
-                }
-                
-
-                document.getElementById('quick-questions').innerHTML = '';
-    
-                const backBtn = document.createElement('button');
-                backBtn.className = 'question-btn btn btn-outline-secondary mb-2';
-                backBtn.innerHTML = '<i class="fas fa-arrow-left me-2"></i> Back';
-                backBtn.addEventListener('click', () => this.goBack());
-                document.getElementById('quick-questions').appendChild(backBtn);
+                this.addMessage(data.message || "Chat message saved successfully", 'bot');
             }
 
 
         } catch (error) {
             console.error('Error sending message:', error);
             this.addMessage("Sorry, I'm having trouble responding right now. Please try again later.", 'bot');
-
         }
     }
 
@@ -613,28 +620,6 @@ class ChatbotWidget {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
-
-    async logEvent(sender, message, type = null, parent_id = null) {
-        try {
-            await fetch(this.API_URL + '/api/chat/log', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': this.apiKey
-                },
-                body: JSON.stringify({
-                    session_id: this.sessionId,
-                    sender: sender,
-                    message: message,
-                    type: type,
-                    parent_id: parent_id
-                })
-            });
-        } catch (error) {
-            console.error('Failed to log chat event:', error);
-        }
-    }
-
     toggleMinimize() {
         this.isMinimized = !this.isMinimized;
         this.container.classList.toggle('minimized');
@@ -643,8 +628,6 @@ class ChatbotWidget {
     closeWidget() {
         this.container.remove();
     }
-
-
 }
 
 // Initialize when script is loaded
