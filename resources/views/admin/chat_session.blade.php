@@ -11,14 +11,15 @@
                     <h5 class="mb-0">Chat Session History</h5>
                 </div>
                 <div class="card-body">
-                    <div class="chat-container" style="height: 500px; overflow-y: auto; margin-bottom: 20px;">
+                    <div class="chat-container" id="chat-container" style="height: 500px; overflow-y: auto; margin-bottom: 20px;">
                         @foreach($logs as $log)
                             <div class="mb-3">
                                 <div class="d-flex justify-content-{{ $log->sender === 'user' ? 'end' : 'start' }}">
                                     <div class="card {{ $log->sender === 'user' ? 'bg-primary text-white' : 'bg-light' }}" style="max-width: 80%;">
+                                        <div class="card-header">
+                                            <strong>{{ ucfirst($log->sender) }}: </strong>{{ ucfirst($log->type) }}
+                                        </div>
                                         <div class="card-body">
-                                            <strong>{{ ucfirst($log->sender) }}</strong>
-                                            
                                             @if($log->type === 'list')
                                                 @php
                                                     $jsonData = json_decode($log->message, true);
@@ -35,8 +36,9 @@
                                                     <ul class="list-unstyled mb-0">
                                                         @foreach($jsonData as $key => $value)
                                                             @if(is_array($value))
-                                                                {{print_r($value)}}
-                                                                {{-- <li><strong>{{ ucfirst($key) }}:</strong> {{ implode(', ', $value) }}</li> --}}
+                                                                @php unset($value['children']) @endphp
+                                                                {{-- {{ print_r($value) }} --}}
+                                                                <li>{{ $value['question'] }}</li>
                                                             @else
                                                                 {{-- <li><strong>{{ ucfirst($key) }}:</strong> {{ $value }}</li> --}}
                                                             @endif
@@ -49,9 +51,9 @@
                                                 <p class="mb-0">{{ $log->message }}</p>
                                             @endif
                                         </div>
-                                        <div class="card-footer text-muted small">
+                                        <div class="card-footer text-muted small {{ $log->sender === 'user' ? 'user-footer-text' : '' }}">
                                             @if($log->created_at instanceof \DateTime)
-                                                {{ $log->created_at->format('M d, Y H:i') }}
+                                                {{ $log->created_at->format('M d, Y h:i A') }}
                                             @else
                                                 {{ $log->created_at }}
                                             @endif
@@ -86,8 +88,8 @@
                             </p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>User:</strong> {{ $session->user->name ?? 'Guest' }}</p>
-                            <p><strong>Email:</strong> {{ $session->user->email ?? 'N/A' }}</p>
+                            <p><strong>User:</strong> {{ $session->user_name ?? 'Guest' }}</p>
+                            <p><strong>Email:</strong> {{ $session->user_email ?? 'N/A' }}</p>
                         </div>
                     </div>
                 </div>
@@ -118,5 +120,15 @@
     .bg-primary .card-body ul li:last-child {
         border-bottom: none;
     }
+    .user-footer-text{
+        color: rgb(193 193 193) !important
+    }
 </style>
 @endsection
+@push('scripts')
+<script>
+    const messagesContainer = document.getElementById('chat-container');
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+</script>
+@endpush

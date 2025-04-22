@@ -101,7 +101,7 @@
                         @foreach($recentSessions as $session)
                             <tr>
                                 <td>{{ $session->user_name }}</td>
-                                <td>{{ $session->user_email }}</td>
+                                <td><a href="{{route('admin.dashboard.session_id', $session->id)}}"> {{ $session->user_email }}</a> </td>
                                 <td>{{ $session->started_at->format('M d, Y H:i') }}</td>
                                 <td>
                                     <span class="badge {{ $session->ended_at ? 'bg-secondary' : 'bg-success' }}">
