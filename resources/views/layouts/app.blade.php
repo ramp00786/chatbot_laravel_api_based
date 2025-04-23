@@ -33,6 +33,12 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.api-keys') }}">API Keys</a>
                     </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.end-inactive-sessions') }}">End inactive sessions</a>
+                    </li>
+
+                    
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">

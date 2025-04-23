@@ -13,13 +13,48 @@ class ChatbotWidget {
         this.init();
     }
 
-    init() {
+    // init() {
+    //     this.createWidget();
+    //     this.bindEvents();
+    //     this.bindUnloadEvents();
+    //     // Check if we have a session and user data
+    //     if (this.sessionId && this.userData) {
+    //         this.showChatInterface();
+    //     }
+    // }
+
+    async init() {
         this.createWidget();
         this.bindEvents();
         this.bindUnloadEvents();
+    
         // Check if we have a session and user data
         if (this.sessionId && this.userData) {
-            this.showChatInterface();
+            const isStillActive = await this.checkSessionStatus();
+            
+            if (isStillActive) {
+                this.showChatInterface();
+            } else {
+                this.logout(); // session expired or ended
+            }
+        }
+    }
+
+    async checkSessionStatus() {
+        try {
+            const response = await fetch(`${this.API_URL}/api/chat/sessions/check?session_id=${this.sessionId}`, {
+                headers: {
+                    'X-API-KEY': this.apiKey
+                }
+            });
+            const data = await response.json();
+
+            this.sessionId = data.session_id;
+    
+            return data.status === 'active';
+        } catch (error) {
+            console.error('Failed to verify session status:', error);
+            return false; // fail-safe: assume session ended
         }
     }
 
@@ -38,6 +73,39 @@ class ChatbotWidget {
         window.addEventListener('beforeunload', sendLogoutBeacon);
         window.addEventListener('pagehide', sendLogoutBeacon);
         window.addEventListener('unload', sendLogoutBeacon);
+    }
+
+    startSessionMonitor() {
+        this.stopSessionMonitor(); // prevent multiple intervals
+    
+        this.sessionMonitorInterval = setInterval(async () => {
+            if (!this.sessionId) return;
+    
+            try {
+                const res = await fetch(`${this.API_URL}/api/chat/sessions/check?session_id=${this.sessionId}`, {
+                    headers: {
+                        'X-API-KEY': this.apiKey
+                    }
+                });
+                const data = await res.json();
+    
+                if (data.status === 'ended') {
+                    // this.addMessage('⏹️ Your session has been ended due to inactivity.', 'bot');
+                    let regForm = document.getElementById('registration-form');
+                    regForm.prepend()
+                    this.logout('⏹️ Your session has been ended due to inactivity.'); // triggers frontend cleanup
+                }
+            } catch (e) {
+                console.warn('Session check failed:', e);
+            }
+        }, 1000); // every 2 minutes = 120000, every 1 minute = 60000, every 30 sec = 30000
+    }
+    
+    stopSessionMonitor() {
+        if (this.sessionMonitorInterval) {
+            clearInterval(this.sessionMonitorInterval);
+            this.sessionMonitorInterval = null;
+        }
     }
 
 
@@ -113,6 +181,7 @@ class ChatbotWidget {
         }
         
         this.loadInitialQuestions();
+        this.startSessionMonitor();
     }
 
     injectStyles() {
@@ -461,6 +530,8 @@ class ChatbotWidget {
             // Hide input and send button
             document.getElementById('user-input').style.display = 'none';
             document.getElementById('send-btn').style.display = 'none';
+
+            this.stopSessionMonitor();
     
         } catch (error) {
             console.error('Error during logout:', error);

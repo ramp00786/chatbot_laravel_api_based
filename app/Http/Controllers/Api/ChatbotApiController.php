@@ -173,4 +173,19 @@ class ChatbotApiController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+
+    public function checkSessionStatus(Request $request)
+    {
+        $request->validate([
+            'session_id' => 'required|exists:chat_sessions,id',
+        ]);
+
+        $session = ChatSession::find($request->session_id);
+
+        return response()->json([
+            'session_id' => $session->id,
+            'status' => $session->ended_at ? 'ended' : 'active',
+        ]);
+    }
 }

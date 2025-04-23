@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EndChatSessionController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -67,6 +68,9 @@ Route::middleware('auth')->group(function() {
 
     // Statistics
     // Route::get('/statistics', [App\Http\Controllers\Admin\StatisticController::class, 'import'])->name('admin.statistics.import');
+
+    Route::get('/end-inactive-sessions', [EndChatSessionController::class, 'index'])->name('admin.end-inactive-sessions');
+    Route::get('/stream-end-inactive-sessions', [EndChatSessionController::class, 'endInactiveSessionsSSE']);
 });
 
 
