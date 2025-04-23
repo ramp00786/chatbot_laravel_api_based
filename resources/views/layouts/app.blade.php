@@ -17,10 +17,11 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="{{ route('admin.dashboard') }}">Chatbot Admin</a>
+            <a class="navbar-brand" href="{{ url('/') }}">Chatbot Admin</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            @if(Auth::check())
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
@@ -42,6 +43,31 @@
                     </li>
                 </ul>
             </div>
+            @endif
+            @if (Route::has('login'))
+                <ul class="navbar-nav">
+                    @auth
+                        <li class="nav-item">
+                            <a href="{{ url('/dashboard') }}" class="nav-link">
+                                Dashboard
+                            </a>
+                        </li>
+                    @else
+                        <li class="nav-item">
+                            <a href="{{ url('/login') }}" class="nav-link">
+                                Login
+                            </a>
+                        </li>
+                        @if (Route::has('register'))
+                            <li class="nav-item">
+                                <a href="{{ url('/register') }}" class="nav-link">
+                                    Register
+                                </a>
+                            </li>
+                        @endif
+                    @endauth
+                </ul>
+            @endif
         </div>
     </nav>
 

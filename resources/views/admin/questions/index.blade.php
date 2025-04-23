@@ -59,7 +59,7 @@
                     </td>
                     <td>{{ $question->enable_input ? 'Yes':'No' }}</td>
                     <td>{{ $question->created_at->format('Y-m-d H:i') }}</td>
-                    <td>
+                    <td nowrap>
                         <a href="{{ route('admin.questions.edit', $question->id) }}" class="btn btn-sm btn-outline-primary">
                             <i class="fas fa-edit"></i>
                         </a>

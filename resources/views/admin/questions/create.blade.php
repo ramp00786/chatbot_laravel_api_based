@@ -63,7 +63,7 @@
                                 <div class="form-group">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" class="custom-control-input" id="is_final" name="is_final" value="1" {{ old('is_final') ? 'checked' : '' }}>
-                                        <label class="custom-control-label" for="is_final">Final Question (End of conversation)</label>
+                                        <label class="custom-control-label" for="is_final">Final Question</label>
                                     </div>
                                 </div>
                             </div>
