@@ -74,8 +74,11 @@ Route::middleware('auth')->group(function() {
 });
 
 
+// Admin Dashboard
 Route::prefix('admin')->middleware('auth')->group(function() {
     Route::get('questions/{question}/children', [App\Http\Controllers\Admin\QuestionController::class, 'children'])
         ->name('admin.questions.children');
     Route::resource('questions', App\Http\Controllers\Admin\QuestionController::class);
 });
+
+

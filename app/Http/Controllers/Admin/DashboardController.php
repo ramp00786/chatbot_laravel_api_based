@@ -31,6 +31,10 @@ class DashboardController extends Controller
             'total_messages' => ChatMessage::whereHas('chatSession.apiKey', function($q) use ($user) {
                 $q->where('user_id', $user->id);
             })->count(),
+
+            'total_chats' => ChatLog::count(),
+
+            
             
             'active_api_keys' => $user->apiKeys()->where('is_active', true)->count()
         ];

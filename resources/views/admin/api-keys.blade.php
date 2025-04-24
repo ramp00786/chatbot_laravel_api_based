@@ -44,6 +44,7 @@
                     <thead>
                         <tr>
                             <th>Key</th>
+                            <th>Name</th>
                             <th>Status</th>
                             <th>Created At</th>
                             <th>Last Used</th>
@@ -65,6 +66,7 @@
                                         <i class="fas fa-copy"></i>
                                     </button>
                                 </td>
+                                <td> {{$key->name}} </td>
                                 <td>
                                     <span class="badge {{ $key->is_active ? 'bg-success' : 'bg-secondary' }}">
                                         {{ $key->is_active ? 'Active' : 'Inactive' }}
@@ -124,15 +126,15 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="keyName" class="form-label">Key Name (Optional)</label>
-                        <input type="text" class="form-control" id="keyName" name="name">
+                        <label for="keyName" class="form-label">Key Name (Required) <span class="text-danger">*</span> </label>
+                        <input type="text" class="form-control" id="keyName" name="name" @required(true)>
                         <div class="form-text">Helps you identify this key later</div>
                     </div>
                     <div class="mb-3">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="enableKey" name="is_active" checked value="1"
+                            <input class="form-check-input" readonly type="checkbox" id="enableKey" name="is_active" checked value="1"
                             @checked(old('is_active', $apiKey->is_active ?? true))>
-                            <label class="form-check-label" for="enableKey">
+                            <label class="form-check-label" for="">
                                 Enable Key Immediately
                             </label>
                         </div>

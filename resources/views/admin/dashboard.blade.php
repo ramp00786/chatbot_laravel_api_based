@@ -7,8 +7,8 @@
     <h2 class="mb-4">Dashboard Overview</h2>
     
     <!-- Stats Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
+    <div class="row mb-4 d-flex justify-content-center">
+        <div class="col-md-4 my-4">
             <div class="card text-white bg-primary">
                 <div class="card-body">
                     <h5 class="card-title">Total Sessions</h5>
@@ -16,7 +16,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4 my-4">
             <div class="card text-white bg-success">
                 <div class="card-body">
                     <h5 class="card-title">Active Sessions</h5>
@@ -24,7 +24,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4 my-4">
             <div class="card text-white bg-info">
                 <div class="card-body">
                     <h5 class="card-title">Total Messages</h5>
@@ -32,7 +32,15 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4 my-4">
+            <div class="card text-white bg-purple">
+                <div class="card-body">
+                    <h5 class="card-title">Total Chats</h5>
+                    <h2>{{ $stats['total_chats'] }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 my-4">
             <div class="card text-white bg-warning">
                 <div class="card-body">
                     <h5 class="card-title">Active API Keys</h5>
@@ -87,6 +95,7 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
+                {{$stats['total_chats']}}
                 <table class="table">
                     <thead>
                         <tr>
@@ -94,7 +103,7 @@
                             <th>Email</th>
                             <th>Started At</th>
                             <th>Status</th>
-                            <th>API Key</th>
+                            <th>API Key Name</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -108,7 +117,7 @@
                                         {{ $session->ended_at ? 'Completed' : 'Active' }}
                                     </span>
                                 </td>
-                                <td>{{ \Illuminate\Support\Str::limit($session->apiKey->key, 10) }}</td>
+                                <td>{{ \Illuminate\Support\Str::limit($session->apiKey->name, 10) }}</td>
                             </tr>
                         @endforeach
                     </tbody>

@@ -91,14 +91,14 @@ class ChatbotWidget {
     
                 if (data.status === 'ended') {
                     // this.addMessage('⏹️ Your session has been ended due to inactivity.', 'bot');
-                    let regForm = document.getElementById('registration-form');
-                    regForm.prepend()
+                    // let regForm = document.getElementById('registration-form');
+                    // regForm.prepend()
                     this.logout('⏹️ Your session has been ended due to inactivity.'); // triggers frontend cleanup
                 }
             } catch (e) {
                 console.warn('Session check failed:', e);
             }
-        }, 1000); // every 2 minutes = 120000, every 1 minute = 60000, every 30 sec = 30000
+        }, 1000); // every 2 minutes = 120000, every 1 minute = 60000, every 30 sec = 30000, every 1 sec = 1000 
     }
     
     stopSessionMonitor() {
@@ -473,7 +473,7 @@ class ChatbotWidget {
         document.getElementById('send-btn').style.display = 'none';
     }
 
-    async logout() {
+    async logout(message = null) {
         try {
             // Show loading state on restart button
             const restartBtn = document.getElementById('chatbot-restart');
@@ -501,6 +501,10 @@ class ChatbotWidget {
             // Clear localStorage
             localStorage.removeItem('chatbot_session_id');
             localStorage.removeItem('chatbot_user_data');
+
+
+            // if session logout via timeout
+            
             
             // Clear chat messages
             document.getElementById('chat-messages').innerHTML = '';
@@ -510,6 +514,11 @@ class ChatbotWidget {
             document.getElementById('chat-messages').style.display = 'none';
             document.getElementById('quick-questions').style.display = 'none';
             document.getElementById('chatbot-footer').style.display = 'none';
+
+            if(message){
+                document.getElementById('chat-messages').style.display = 'block';
+                this.addMessage(message, 'bot');
+            }
             
             // Reset states
             this.sessionId = null;
@@ -713,6 +722,17 @@ class ChatbotWidget {
 
     closeWidget() {
         this.container.remove();
+    }
+
+    async getIpAddress() {
+        try {
+            const response = await fetch("https://api.ipify.org?format=json");
+            const data = await response.json();
+            return data.ip;
+        } catch (error) {
+            console.error("Error fetching IP address:", error);
+            return null;
+        }
     }
 
 

@@ -18,9 +18,9 @@ class EndChatSessionController extends Controller
     public function endInactiveSessionsSSE(): StreamedResponse
     {
         return response()->stream(function () {
-            $this->line("🔍 Checking for inactive sessions (no activity for 30 minutes)...");
+            $this->line("🔍 Checking for inactive sessions (no activity for 5 minutes)...");
 
-            $inactiveThreshold = now()->subMinutes(0.01);
+            $inactiveThreshold = now()->subMinutes(5);
             $activeSessions = ChatSession::whereNull('ended_at')->get();
             $this->line("Found {$activeSessions->count()} active sessions to check");
             $this->line("⏳ Processing sessions...");
