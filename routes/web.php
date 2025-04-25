@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\EndChatSessionController;
 
 Route::get('/', function () {
@@ -80,5 +81,28 @@ Route::prefix('admin')->middleware('auth')->group(function() {
         ->name('admin.questions.children');
     Route::resource('questions', App\Http\Controllers\Admin\QuestionController::class);
 });
+
+
+// routes/web.php (add these to your admin routes)
+Route::prefix('admin')->group(function() {
+    // Reports
+    Route::get('/reports/sessions', [ReportsController::class, 'sessionsReport'])->name('admin.reports.sessions');
+    Route::get('/reports/sessions/active', [ReportsController::class, 'sessionsReport'])->name('admin.reports.sessions.active');
+    Route::get('/reports/messages', [ReportsController::class, 'messagesReport'])->name('admin.reports.messages');
+    Route::get('/reports/locations', [ReportsController::class, 'locationsReport'])->name('admin.reports.locations');
+    Route::get('/reports/devices', [ReportsController::class, 'devicesReport'])->name('admin.reports.devices');
+    Route::get('/reports/analytics', [ReportsController::class, 'analyticsReport'])->name('admin.reports.analytics');
+
+    Route::get('/reports/chat-logs', [ReportsController::class, 'chatLogsReport'])->name('admin.reports.chat_logs');
+    
+    // Chart data endpoints
+    Route::get('/dashboard/chart-data/{chart}/{range}', [DashboardController::class, 'chartData']);
+    Route::get('/dashboard/engagement-data/{range}', [DashboardController::class, 'engagementData']);
+    Route::get('/dashboard/update-time-range/{days}', [DashboardController::class, 'updateTimeRange']);
+
+    
+});
+
+
 
 

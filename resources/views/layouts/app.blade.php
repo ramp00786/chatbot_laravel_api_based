@@ -6,7 +6,7 @@
     <title>Chatbot Admin - @yield('title')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="dist/js-snackbar.css?v=1.4" />
+    <link rel="stylesheet" href="{{asset('dist/js-snackbar.css?v=1.4')}}" />
     <link rel="icon" type="image/x-icon" href="{{asset('images/favicon.ico')}}">
     <link rel="stylesheet" href="{{asset('dist/style.css')}}">
     <style>
@@ -42,6 +42,19 @@
                     <li class="nav-item">
                         <a class="nav-link {{ Route::is('admin.end-inactive-sessions') ? 'active' : '' }}" href="{{ route('admin.end-inactive-sessions') }}">End inactive sessions</a>
                     </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Reports
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="{{route('admin.reports.sessions')}}">Session</a></li>
+                            <li><a class="dropdown-item" href="#">Another action</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">Something else here</a></li>
+                        </ul>
+                    </li>
+                        
 
                     
                 </ul>
@@ -87,9 +100,15 @@
         
         @yield('content')
     </div>
+    <!-- jQuery 3.7.1 -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="dist/js-snackbar.js?v=1.4"></script>
+
+    {{-- Extra --}}
+
+    {{-- Extra --}}
+    <script src="{{asset('dist/js-snackbar.js?v=1.4')}}"></script>
     <script>
         var colors_Default = function (msg) {
             SnackBar({
