@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ChatLog extends Model
 {
@@ -31,4 +32,11 @@ class ChatLog extends Model
     {
         return $this->hasMany(ChatLog::class, 'parent_id');
     }
+
+    public function chatSession(): BelongsTo
+    {
+        return $this->belongsTo(ChatSession::class, 'session_id', 'id');
+    }
+
+    
 }

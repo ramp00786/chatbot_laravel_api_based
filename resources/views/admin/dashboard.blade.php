@@ -100,7 +100,7 @@
                             <i class="fas fa-envelope fa-2x text-gray-300"></i>
                         </div>
                     </div>
-                    <a href="{{ route('admin.reports.messages') }}" class="stretched-link"></a>
+                    <a href="{{ route('admin.reports.sessions') }}" class="stretched-link"></a>
                 </div>
             </div>
         </div>
@@ -125,7 +125,7 @@
                             <i class="fas fa-globe fa-2x text-gray-300"></i>
                         </div>
                     </div>
-                    <a href="{{ route('admin.reports.locations') }}" class="stretched-link"></a>
+                    <a href="{{ route('admin.reports.sessions') }}" class="stretched-link"></a>
                 </div>
             </div>
         </div>
@@ -150,7 +150,7 @@
                             <i class="fas fa-desktop fa-2x text-gray-300"></i>
                         </div>
                     </div>
-                    <a href="{{ route('admin.reports.devices') }}" class="stretched-link"></a>
+                    <a href="{{ route('admin.reports.sessions') }}" class="stretched-link"></a>
                 </div>
             </div>
         </div>
@@ -175,7 +175,7 @@
                             <i class="fas fa-users fa-2x text-gray-300"></i>
                         </div>
                     </div>
-                    <a href="{{ route('admin.reports.analytics') }}" class="stretched-link"></a>
+                    <a href="{{ route('admin.reports.sessions') }}" class="stretched-link"></a>
                 </div>
             </div>
         </div>
@@ -279,7 +279,7 @@
                           <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); updateChart('messagesChart', 'month')">Last 30 Days</a></li>
                           {{-- <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); updateChart('messagesChart', 'quarter')">Last 90 Days</a></li> --}}
                           <li><hr class="dropdown-divider"></li>
-                          <li><a class="dropdown-item" href="{{ route('admin.reports.messages') }}">View Full Report</a></li>
+                          {{-- <li><a class="dropdown-item" href="{{ route('admin.reports.messages') }}">View Full Report</a></li> --}}
                         </ul>
                     </div>
                 </div>
@@ -334,7 +334,7 @@
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary">Top Locations</h6>
-                    <a href="{{ route('admin.reports.locations') }}" class="btn btn-sm btn-link">View All</a>
+                    <a href="{{ route('admin.reports.sessions') }}" class="btn btn-sm btn-link">View All</a>
                 </div>
                 <div class="card-body">
                     <div class="chart-pie pt-4 pb-2">
@@ -356,7 +356,7 @@
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary">Device Distribution</h6>
-                    <a href="{{ route('admin.reports.devices') }}" class="btn btn-sm btn-link">View All</a>
+                    <a href="{{ route('admin.reports.sessions') }}" class="btn btn-sm btn-link">View All</a>
                 </div>
                 <div class="card-body">
                     <div class="chart-pie pt-4 pb-2">
@@ -382,7 +382,7 @@
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary">Traffic Sources</h6>
-                    <a href="{{ route('admin.reports.analytics') }}" class="btn btn-sm btn-link">View All</a>
+                    <a href="{{ route('admin.reports.sessions') }}" class="btn btn-sm btn-link">View All</a>
                 </div>
                 <div class="card-body">
                     <div class="chart-pie pt-4 pb-2">
@@ -390,13 +390,16 @@
                     </div>
                     <div class="mt-4 text-center small">
                         <span class="mr-2">
-                            <i class="fas fa-circle text-warning"></i> Direct
+                            <i class="fas fa-circle text-warning"></i> Home
                         </span>
                         <span class="mr-2">
-                            <i class="fas fa-circle text-danger"></i> Referral
+                            <i class="fas fa-circle text-danger"></i> About
                         </span>
                         <span class="mr-2">
-                            <i class="fas fa-circle text-secondary"></i> Social
+                            <i class="fas fa-circle text-success"></i> Contact
+                        </span>
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-info"></i> Ohers
                         </span>
                     </div>
                 </div>
@@ -496,6 +499,7 @@
     }
 </style>
 @endpush
+
 
 
 @push('scripts')
@@ -719,10 +723,10 @@ var ctx = document.getElementById('trafficChart');
 var trafficChart = new Chart(ctx, {
     type: 'polarArea',
     data: {
-        labels: ['Direct', 'Referral', 'Social', 'Organic'],
+        labels: ['Home', 'About', 'Contact', 'Others'],
         datasets: [{
-            data: [{{$deviceDistribution['Desktop']}},{{$deviceDistribution['Mobile']}},{{$deviceDistribution['Tablet']}}, 5],
-            backgroundColor: ['#f6c23e', '#e74a3b', '#858796', '#36b9cc'],
+            data: [50,20,30, 15],
+            backgroundColor: ['#f6c23e', '#e74a3b', '#198754', '#0dcaf0'],
             hoverBorderColor: "rgba(234, 236, 244, 1)",
         }],
     },
@@ -738,7 +742,7 @@ var trafficChart = new Chart(ctx, {
 
 // Update chart data
 function updateChart(chartId, range) {
-    fetch(`/admin/dashboard/chart-data/${chartId}/${range}`)
+    fetch(`{{url('/admin/dashboard/chart-data/${chartId}/${range}')}}`)
         .then(response => response.json())
         .then(data => {
             const chart = window[chartId];
@@ -750,7 +754,7 @@ function updateChart(chartId, range) {
 
 // Update engagement chart
 function updateEngagementChart(range) {
-    fetch(`/admin/dashboard/engagement-data/${range}`)
+    fetch(`{{url('/admin/dashboard/engagement-data/${range}')}}`)
         .then(response => response.json())
         .then(data => {
             engagementChart.data.labels = data.labels;
@@ -762,7 +766,7 @@ function updateEngagementChart(range) {
 
 // Update time range
 function updateTimeRange(days) {
-    fetch(`/admin/dashboard/update-time-range/${days}`)
+    fetch(`{{url('/admin/dashboard/update-time-range/${days}')}}`)
         .then(response => response.json())
         .then(data => {
             // Update all charts with new data
@@ -818,7 +822,7 @@ function updateRealTimeMetrics() {
 $(document).ready(function() {
     $('.table').DataTable({
         "order": [[2, "desc"]],
-        "pageLength": 5
+        "pageLength": 10
     });
     
     // Update real-time metrics every 5 seconds

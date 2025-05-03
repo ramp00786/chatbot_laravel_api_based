@@ -121,6 +121,8 @@ class ReportsController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(25);
 
+        
+
         return view('admin.reports.sessions', compact(
             'sessions', 
             'title',

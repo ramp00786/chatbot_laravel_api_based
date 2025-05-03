@@ -22,6 +22,10 @@ Route::middleware(['api.key'])->group(function () {
         Route::post('/log', [ChatbotApiController::class, 'logEvent']);
 
         Route::get('/sessions/check', [ChatbotApiController::class, 'checkSessionStatus']);
+
+        Route::get('/questions/{id}', [ChatbotApiController::class, 'getQuestion']);
+    
+
     });
 });
 

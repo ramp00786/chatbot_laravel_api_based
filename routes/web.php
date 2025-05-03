@@ -3,7 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ReportsController;
+use App\Http\Controllers\Admin\UploadQuestionCSVController;
 use App\Http\Controllers\EndChatSessionController;
+use App\Models\ChatbotQuestion;
+use App\Http\Controllers\FileController;
+
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -14,7 +19,8 @@ Auth::routes();
 // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'chatbot'])->name('chatbot');
+// Route::get('/home', [App\Http\Controllers\HomeController::class, 'chatbot'])->name('chatbot');
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'redirectToDashboard'])->name('chatbot');
 
 
 
@@ -72,6 +78,31 @@ Route::middleware('auth')->group(function() {
 
     Route::get('/end-inactive-sessions', [EndChatSessionController::class, 'index'])->name('admin.end-inactive-sessions');
     Route::get('/stream-end-inactive-sessions', [EndChatSessionController::class, 'endInactiveSessionsSSE']);
+
+
+    Route::get('/get-file-type/{id}', [App\Http\Controllers\FileTypeController::class, 'getFileType']);
+
+
+    Route::get('/get-answer-data/{id}', function($id) {
+        $question = ChatbotQuestion::findOrFail($id);
+        
+        return response()->json([
+            'answer_data' => $question->answer_data,
+            'answer_content' => $question->answer,
+        ]);
+    });
+
+
+    Route::get('/file/view/{filename}', [FileController::class, 'view'])->name('file.view');
+    Route::get('/file/download/{filename}', [FileController::class, 'download'])->name('file.download');
+
+    // Route::get('/file/view/{filename}', function($filename){
+    //     return "asdf".$filename;
+    // });
+
+    Route::get('/csv', [UploadQuestionCSVController::class, 'index']);
+    Route::get('/csv-reserval', [UploadQuestionCSVController::class, 'reverseInsertions']);
+
 });
 
 
@@ -94,11 +125,15 @@ Route::prefix('admin')->group(function() {
     Route::get('/reports/analytics', [ReportsController::class, 'analyticsReport'])->name('admin.reports.analytics');
 
     Route::get('/reports/chat-logs', [ReportsController::class, 'chatLogsReport'])->name('admin.reports.chat_logs');
+    Route::get('/chat/history/{session}', [ChatHistoryController::class, 'show'])
+        ->name('admin.chat.history.show');
     
     // Chart data endpoints
     Route::get('/dashboard/chart-data/{chart}/{range}', [DashboardController::class, 'chartData']);
     Route::get('/dashboard/engagement-data/{range}', [DashboardController::class, 'engagementData']);
     Route::get('/dashboard/update-time-range/{days}', [DashboardController::class, 'updateTimeRange']);
+
+    
 
     
 });

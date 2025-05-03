@@ -15,7 +15,7 @@
                     </div>
                 </div>
 
-                <form action="{{ route('admin.questions.update', $question->id) }}" method="POST">
+                <form action="{{ route('admin.questions.update', $question->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
                     
@@ -53,13 +53,57 @@
                         </div>
 
                         <!-- Answer Field -->
-                        <div class="form-group">
+                        {{-- <div class="form-group">
                             <label for="answer">Answer (Leave empty if this leads to more questions)</label>
+                            <textarea name="answer" id="answer" class="form-control" rows="3">{{ old('answer', $question->answer) }}</textarea>
+                        </div> --}}
+
+                        <!-- Add similar answer type handling to the edit form -->
+                        <div class="form-group my-4">
+                            <label for="answer_type">Answer Type (Leave empty if this leads to more questions)</label>
+                            <select name="answer_type" id="answer_type" class="form-control">
+                                <option value="">No Answer</option>
+                                <option value="simple" {{ old('answer_type', $question->answer_type) == 'simple' ? 'selected' : '' }}>Simple Text</option>
+                                <option value="rich_text" {{ old('answer_type', $question->answer_type) == 'rich_text' ? 'selected' : '' }}>Rich Text Editor</option>
+                                <option value="file" {{ old('answer_type', $question->answer_type) == 'file' ? 'selected' : '' }}>File Upload</option>
+                                <option value="youtube" {{ old('answer_type', $question->answer_type) == 'youtube' ? 'selected' : '' }}>YouTube Video</option>
+                            </select>
+                        </div>
+
+                        <div id="answer_text_container" class="answer-input-container">
                             <textarea name="answer" id="answer" class="form-control" rows="3">{{ old('answer', $question->answer) }}</textarea>
                         </div>
 
+                        <div id="answer_editor_container" class="answer-input-container" style="display: none;">
+                            <textarea name="answer_rich_text" id="answer_rich_text" class="form-control">{{ old('answer_rich_text', $question->answer_type === 'rich_text' ? $question->answer : '') }}</textarea>
+                        </div>
+
+                        <div id="answer_file_container" class="answer-input-container" style="display: none;">
+                            @if($question->answer_type === 'file' && $question->answer)
+                            <div class="mb-2">
+                                <p>Current file: {{ json_decode($question->answer_data)->original_name }}</p>
+                                <a href="{{ asset('storage/'.$question->answer) }}" target="_blank" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </div>
+                            @endif
+                            <input type="file" name="answer_file" id="answer_file" class="form-control-file">
+                            <small class="text-muted">Allowed: images (png,jpg,gif), docs, pdf, ppt, video files</small>
+                        </div>
+
+                        <div id="answer_youtube_container" class="answer-input-container" style="display: none;">
+                            <input type="url" name="answer_youtube" id="answer_youtube" class="form-control" 
+                                placeholder="Enter YouTube URL" 
+                                value="{{ old('answer_youtube', $question->answer_type === 'youtube' ? json_decode($question->answer_data)->url : '') }}">
+                            @if($question->answer_type === 'youtube' && $question->answer)
+                            <div class="mt-2">
+                                <iframe width="100%" height="200" src="https://www.youtube.com/embed/{{ $question->answer }}" frameborder="0" allowfullscreen></iframe>
+                            </div>
+                            @endif
+                        </div>
+
                         <!-- Options Toggle -->
-                        <div class="row">
+                        <div class="row mt-4">
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <div class="custom-control custom-switch">
@@ -112,6 +156,56 @@
         });
 
         // Prevent circular references
+        $('#is_final').change(function() {
+            if($(this).is(':checked')) {
+                $('#enable_input').prop('checked', false);
+            }
+        });
+
+        $('#enable_input').change(function() {
+            if($(this).is(':checked')) {
+                $('#is_final').prop('checked', false);
+            }
+        });
+    });
+</script>
+@endpush
+
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="{{asset('dist/ckeditor/ckeditor.js')}}"></script>
+<script>
+    $(document).ready(function() {
+        $('#parent_id').select2({
+            placeholder: "Select parent question",
+            allowClear: true
+        });
+
+        // Initialize CKEditor (but keep it hidden initially)
+        let editor = CKEDITOR.replace('answer_rich_text');
+        
+        // Handle answer type changes
+        $('#answer_type').change(function() {
+            $('.answer-input-container').hide();
+            
+            switch($(this).val()) {
+                case 'simple':
+                    $('#answer_text_container').show();
+                    break;
+                case 'rich_text':
+                    $('#answer_editor_container').show();
+                    break;
+                case 'file':
+                    $('#answer_file_container').show();
+                    break;
+                case 'youtube':
+                    $('#answer_youtube_container').show();
+                    break;
+            }
+        }).trigger('change');
+
+        // Toggle logic
         $('#is_final').change(function() {
             if($(this).is(':checked')) {
                 $('#enable_input').prop('checked', false);

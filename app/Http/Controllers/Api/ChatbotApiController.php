@@ -32,7 +32,7 @@ class ChatbotApiController extends Controller
                   ->firstOrFail();
 
         // Get location data
-        $position = Location::get($request->ip());
+        $position = Location::get($request->ip_address);
         $location = $position ? ($position->cityName . ', ' . $position->countryName) : 'Unknown';
 
         // Detect device type
@@ -44,9 +44,10 @@ class ChatbotApiController extends Controller
             'user_name' => $request->name,
             'user_email' => $request->email,
             'user_mobile' => $request->mobile,
-            'ip_address' => $request->ip(),
+            'ip_address' => $request->ip_address,
             'user_agent' => $userAgent,
             'device_type' => $deviceType,
+            'location_json' => $request->location_json,
             'location' => $location,
             'started_at' => now()
         ]);
@@ -73,6 +74,21 @@ class ChatbotApiController extends Controller
             ->get();
 
         return response()->json($questions);
+    }
+
+    public function getQuestion($id, Request $request)
+    {
+        $apiKey = ApiKey::where('key', $request->header('X-API-KEY'))
+                ->where('is_active', true)
+                ->firstOrFail();
+
+        $question = ChatbotQuestion::where('user_id', $apiKey->user_id)
+            ->with(['children' => function($query) {
+                $query->with('children');
+            }])
+            ->findOrFail($id);
+
+        return response()->json($question);
     }
 
     public function saveMessage(Request $request)

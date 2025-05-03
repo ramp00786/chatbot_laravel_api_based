@@ -19,8 +19,10 @@ class ChatbotQuestion extends Model
         'parent_id',
         'question',
         'answer',
+        'answer_data',
         'is_final',
-        'enable_input'
+        'enable_input',
+        'answer_type'
     ];
 
     // Your existing relationships...

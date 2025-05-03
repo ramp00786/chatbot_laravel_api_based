@@ -49,9 +49,9 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <li><a class="dropdown-item" href="{{route('admin.reports.sessions')}}">Session</a></li>
-                            <li><a class="dropdown-item" href="#">Another action</a></li>
+                            {{-- <li><a class="dropdown-item" href="#">Another action</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#">Something else here</a></li>
+                            <li><a class="dropdown-item" href="#">Something else here</a></li> --}}
                         </ul>
                     </li>
                         

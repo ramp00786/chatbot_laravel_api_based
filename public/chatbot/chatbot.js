@@ -6,36 +6,25 @@ class ChatbotWidget {
         this.sessionId = localStorage.getItem('chatbot_session_id') || null;
         this.userData = JSON.parse(localStorage.getItem('chatbot_user_data')) || null;
         this.currentQuestions = null;
-        this.questionHistory = []; // Track question navigation
+        this.questionHistory = [];
         this.isMinimized = false;
         this.pendingNextQuestions = null;
         this.question_answer_after_input = null;
         this.init();
     }
 
-    // init() {
-    //     this.createWidget();
-    //     this.bindEvents();
-    //     this.bindUnloadEvents();
-    //     // Check if we have a session and user data
-    //     if (this.sessionId && this.userData) {
-    //         this.showChatInterface();
-    //     }
-    // }
-
     async init() {
         this.createWidget();
         this.bindEvents();
         this.bindUnloadEvents();
     
-        // Check if we have a session and user data
         if (this.sessionId && this.userData) {
             const isStillActive = await this.checkSessionStatus();
             
             if (isStillActive) {
                 this.showChatInterface();
             } else {
-                this.logout(); // session expired or ended
+                this.logout();
             }
         }
     }
@@ -48,13 +37,11 @@ class ChatbotWidget {
                 }
             });
             const data = await response.json();
-
             this.sessionId = data.session_id;
-    
             return data.status === 'active';
         } catch (error) {
             console.error('Failed to verify session status:', error);
-            return false; // fail-safe: assume session ended
+            return false;
         }
     }
 
@@ -76,8 +63,7 @@ class ChatbotWidget {
     }
 
     startSessionMonitor() {
-        this.stopSessionMonitor(); // prevent multiple intervals
-    
+        this.stopSessionMonitor();
         this.sessionMonitorInterval = setInterval(async () => {
             if (!this.sessionId) return;
     
@@ -90,15 +76,12 @@ class ChatbotWidget {
                 const data = await res.json();
     
                 if (data.status === 'ended') {
-                    // this.addMessage('⏹️ Your session has been ended due to inactivity.', 'bot');
-                    // let regForm = document.getElementById('registration-form');
-                    // regForm.prepend()
-                    this.logout('⏹️ Your session has been ended due to inactivity.'); // triggers frontend cleanup
+                    this.logout('⏹️ Your session has been ended due to inactivity.');
                 }
             } catch (e) {
                 console.warn('Session check failed:', e);
             }
-        }, 1000); // every 2 minutes = 120000, every 1 minute = 60000, every 30 sec = 30000, every 1 sec = 1000 
+        }, 1000);
     }
     
     stopSessionMonitor() {
@@ -107,7 +90,6 @@ class ChatbotWidget {
             this.sessionMonitorInterval = null;
         }
     }
-
 
     createWidget() {
         this.container = document.createElement('div');
@@ -160,22 +142,17 @@ class ChatbotWidget {
             </div>
         `;
         document.body.appendChild(this.container);
-        
-        // Inject required CSS
         this.injectStyles();
-        // Load Font Awesome if not already loaded
         this.loadFontAwesome();
     }
 
     showChatInterface() {
-        // Show chat interface
         document.getElementById('registration-form').style.display = 'none';
         document.getElementById('chat-messages').style.display = 'block';
         document.getElementById('quick-questions').style.display = 'block';
         document.getElementById('chatbot-footer').style.display = 'block';
         document.getElementById('chatbot-restart').style.display = 'inline-block';
         
-        // Add welcome message if no messages exist
         if (document.getElementById('chat-messages').children.length === 0) {
             this.addMessage(`Welcome back, ${this.userData.name}! How can I help you today?`, 'bot');
         }
@@ -247,6 +224,11 @@ class ChatbotWidget {
                 cursor: pointer;
             }
             
+            .rich-text-content img {
+                max-width: 100%;
+                height: auto;
+            }
+            
             @media (max-width: 576px) {
                 #chatbot-widget-container {
                     width: 90vw;
@@ -286,17 +268,18 @@ class ChatbotWidget {
             if(this.isMinimized) this.toggleMinimize();
         });
         
-        // Handle Enter key in input field
         document.getElementById('user-input')?.addEventListener('keypress', (e) => {
             if(e.key === 'Enter') this.handleUserMessage();
         });
     }
 
     async startChat() {
+        const location = await this.getLocationFromIp();
+        console.log(location);
+
         const nameInput = document.getElementById('user-name');
         const emailInput = document.getElementById('user-email');
         
-        // Basic validation
         if(!nameInput.value.trim()) {
             this.showAlert('Please enter your name', 'danger');
             nameInput.focus();
@@ -309,7 +292,6 @@ class ChatbotWidget {
             return;
         }
 
-        // Show loading state
         document.getElementById('start-chat-text').classList.add('d-none');
         document.getElementById('start-chat-spinner').classList.remove('d-none');
         document.getElementById('start-chat-btn').disabled = true;
@@ -317,7 +299,10 @@ class ChatbotWidget {
         this.userData = {
             name: nameInput.value.trim(),
             email: emailInput.value.trim(),
-            mobile: document.getElementById('user-mobile').value.trim()
+            mobile: document.getElementById('user-mobile').value.trim(),
+            ip_address:location.ip,
+            location:location.city,
+            location_json:JSON.stringify(location)
         };
 
         try {
@@ -337,7 +322,6 @@ class ChatbotWidget {
             const data = await response.json();
             this.sessionId = data.session_id;
             
-            // Store in localStorage
             localStorage.setItem('chatbot_session_id', this.sessionId);
             localStorage.setItem('chatbot_user_data', JSON.stringify(this.userData));
             
@@ -346,7 +330,6 @@ class ChatbotWidget {
             console.error('Error starting chat:', error);
             this.showAlert('Failed to start chat. Please try again.', 'danger');
         } finally {
-            // Reset button state
             document.getElementById('start-chat-text').classList.remove('d-none');
             document.getElementById('start-chat-spinner').classList.add('d-none');
             document.getElementById('start-chat-btn').disabled = false;
@@ -369,7 +352,6 @@ class ChatbotWidget {
         const form = document.getElementById('registration-form');
         form.insertBefore(alert, form.firstChild);
         
-        // Auto-dismiss after 5 seconds
         setTimeout(() => {
             const bsAlert = new bootstrap.Alert(alert);
             bsAlert.close();
@@ -389,7 +371,7 @@ class ChatbotWidget {
             }
             
             this.currentQuestions = await response.json();
-            this.questionHistory = []; // Reset history when loading initial questions
+            this.questionHistory = [];
             this.displayQuestions(this.currentQuestions);
         } catch (error) {
             console.error('Error loading questions:', error);
@@ -401,7 +383,6 @@ class ChatbotWidget {
         const container = document.getElementById('quick-questions');
         container.innerHTML = '';     
       
-
         if (this.questionHistory.length > 0) {
             const backBtn = document.createElement('button');
             backBtn.className = 'question-btn btn btn-outline-secondary mb-2';
@@ -410,8 +391,6 @@ class ChatbotWidget {
             container.appendChild(backBtn);
         }
         
-        // console.log('display:', questions);
-
         if (typeof questions !== 'undefined'){
             this.logEvent('bot', JSON.stringify(questions), 'list');
             questions.forEach(question => {
@@ -423,10 +402,7 @@ class ChatbotWidget {
             });
         }
         
-        // Show restart button in header
         document.getElementById('chatbot-restart').style.display = 'inline-block';
-        
-        // Hide input by default
         document.getElementById('user-input').style.display = 'none';
         document.getElementById('send-btn').style.display = 'none';
     }
@@ -440,47 +416,12 @@ class ChatbotWidget {
         }
     }
 
-    restartChat() {
-        // Clear localStorage
-        localStorage.removeItem('chatbot_session_id');
-        localStorage.removeItem('chatbot_user_data');
-        
-        // Clear chat messages
-        document.getElementById('chat-messages').innerHTML = '';
-        
-        // Show registration form again
-        document.getElementById('registration-form').style.display = 'block';
-        document.getElementById('chat-messages').style.display = 'none';
-        document.getElementById('quick-questions').style.display = 'none';
-        document.getElementById('chatbot-footer').style.display = 'none';
-        
-        // Reset states
-        this.sessionId = null;
-        this.userData = null;
-        this.currentQuestions = null;
-        this.questionHistory = [];
-        
-        // Hide restart button
-        document.getElementById('chatbot-restart').style.display = 'none';
-        
-        // Clear input fields
-        document.getElementById('user-name').value = '';
-        document.getElementById('user-email').value = '';
-        document.getElementById('user-mobile').value = '';
-        
-        // Hide input and send button
-        document.getElementById('user-input').style.display = 'none';
-        document.getElementById('send-btn').style.display = 'none';
-    }
-
     async logout(message = null) {
         try {
-            // Show loading state on restart button
             const restartBtn = document.getElementById('chatbot-restart');
             restartBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             restartBtn.disabled = true;
     
-            // Send request to end session if we have a session ID
             if (this.sessionId) {
                 const response = await fetch(this.API_URL+'/api/chat/sessions/end', {
                     method: 'POST',
@@ -498,18 +439,10 @@ class ChatbotWidget {
                 }
             }
     
-            // Clear localStorage
             localStorage.removeItem('chatbot_session_id');
             localStorage.removeItem('chatbot_user_data');
 
-
-            // if session logout via timeout
-            
-            
-            // Clear chat messages
             document.getElementById('chat-messages').innerHTML = '';
-            
-            // Show registration form again
             document.getElementById('registration-form').style.display = 'block';
             document.getElementById('chat-messages').style.display = 'none';
             document.getElementById('quick-questions').style.display = 'none';
@@ -520,100 +453,188 @@ class ChatbotWidget {
                 this.addMessage(message, 'bot');
             }
             
-            // Reset states
             this.sessionId = null;
             this.userData = null;
             this.currentQuestions = null;
             this.questionHistory = [];
             
-            // Reset restart button
             restartBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
             restartBtn.disabled = false;
             restartBtn.style.display = 'none';
             
-            // Clear input fields
             document.getElementById('user-name').value = '';
             document.getElementById('user-email').value = '';
             document.getElementById('user-mobile').value = '';
             
-            // Hide input and send button
             document.getElementById('user-input').style.display = 'none';
             document.getElementById('send-btn').style.display = 'none';
 
             this.stopSessionMonitor();
-    
         } catch (error) {
             console.error('Error during logout:', error);
             
-            // Reset button state even if error occurred
             const restartBtn = document.getElementById('chatbot-restart');
             restartBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
             restartBtn.disabled = false;
             
-            // Show error message
             this.addMessage("Failed to properly end the session. All local data has been cleared.", 'bot');
         }
     }
 
-    
+    // handleQuestionClick(question) {
 
-    handleQuestionClick(question) {
-        if(question.answer){
-            this.question_answer_after_input = question.answer;
-        }
-        // question_answer_after_input
-        // Save current questions to history
-        this.questionHistory.push(this.currentQuestions);
+    //     console.log(question);
+
+    //     if(question.answer){
+    //         this.question_answer_after_input = question.answer;
+    //     }
+        
+    //     this.questionHistory.push(this.currentQuestions);
     
-        // If input is required, show bot message instead of user
-        if (question.enable_input) {
-            this.addMessage(question.question, 'bot');
-            this.logEvent('user', question.question, 'selected');
-            this.logEvent('bot', question.question, 'input_for');
+    //     if (question.enable_input) {
+    //         this.addMessage(question.question, 'bot');            
+    //         this.logEvent('user', question.question, 'selected');
+    //         this.logEvent('bot', question.question, 'input_for');
             
-            this.pendingNextQuestions = question.children;
+    //         this.pendingNextQuestions = question.children;
     
-            // Clear quick questions so only input is visible
-            document.getElementById('quick-questions').innerHTML = '';
+    //         document.getElementById('quick-questions').innerHTML = '';
 
-            const backBtn = document.createElement('button');
-            backBtn.className = 'question-btn btn btn-outline-secondary mb-2';
-            backBtn.innerHTML = '<i class="fas fa-arrow-left me-2"></i> Back';
-            backBtn.addEventListener('click', () => this.goBack());
-            document.getElementById('quick-questions').appendChild(backBtn);
+    //         const backBtn = document.createElement('button');
+    //         backBtn.className = 'question-btn btn btn-outline-secondary mb-2';
+    //         backBtn.innerHTML = '<i class="fas fa-arrow-left me-2"></i> Back';
+    //         backBtn.addEventListener('click', () => this.goBack());
+    //         document.getElementById('quick-questions').appendChild(backBtn);
 
-        } else {
-           
-            this.addMessage(question.question, 'user');
-            this.logEvent('user', question.question, 'selected');
+    //     } else {
+    //         this.addMessage(question.question, 'user');
+    //         this.logEvent('user', question.question, 'selected');
     
-            if (question.is_final) {
-                this.addMessage(question.answer, 'bot');
-                this.logEvent('bot', question.answer, 'final_answer');
-                this.currentQuestions = null;
-                document.getElementById('quick-questions').innerHTML = '';
+    //         if (question.is_final) {
+    //             this.addMessage(
+    //                 question.answer, 
+    //                 'bot', 
+    //                 question.answer_type, 
+    //                 question.answer_data ? JSON.parse(question.answer_data) : null
+    //             );
+    //             this.logEvent('bot', question.answer, 'final_answer');
+    //             this.currentQuestions = null;
+    //             document.getElementById('quick-questions').innerHTML = '';
     
+    //             const backBtn = document.createElement('button');
+    //             backBtn.className = 'question-btn btn btn-outline-secondary mb-2';
+    //             backBtn.innerHTML = '<i class="fas fa-arrow-left me-2"></i> Back';
+    //             backBtn.addEventListener('click', () => this.goBack());
+    //             document.getElementById('quick-questions').appendChild(backBtn);
+    //         } else {
+    //             if(question.answer){
+    //                 this.addMessage(
+    //                     question.answer, 
+    //                     'bot', 
+    //                     question.answer_type, 
+    //                     question.answer_data ? JSON.parse(question.answer_data) : null
+    //                 );
+    //                 this.logEvent('bot', question.answer, 'final_answer');
+    //             }
+                
+    //             this.currentQuestions = question.children;
+    //             this.displayQuestions(question.children);
+    //         }
+    //     }
+    
+    //     const inputEnabled = question.enable_input || false;
+    //     document.getElementById('user-input').style.display = inputEnabled ? 'block' : 'none';
+    //     document.getElementById('send-btn').style.display = inputEnabled ? 'block' : 'none';
+    
+    //     if (inputEnabled) {
+    //         document.getElementById('user-input').focus();
+    //     }
+    // }
+
+    async handleQuestionClick(question) {
+        this.logEvent('user', question.question, 'selected');
+        
+        // Add user's question to chat
+        this.addMessage(question.question, 'user');
+        
+        // Store current questions in history before fetching new ones
+        this.questionHistory.push(this.currentQuestions);
+        
+        try {
+            // Show loading state
+            const quickQuestionsContainer = document.getElementById('quick-questions');
+            quickQuestionsContainer.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+            
+            // Fetch question details from API
+            const response = await fetch(`${this.API_URL}/api/chat/questions/${question.id}`, {
+                headers: {
+                    'X-API-KEY': this.apiKey
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const questionData = await response.json();
+            
+            // Handle the response based on question type
+            if (questionData.enable_input) {
+                // Show input field for user response
+                this.pendingNextQuestions = questionData.children || null;
+                
+                quickQuestionsContainer.innerHTML = '';
+                
+                // Add back button
                 const backBtn = document.createElement('button');
                 backBtn.className = 'question-btn btn btn-outline-secondary mb-2';
                 backBtn.innerHTML = '<i class="fas fa-arrow-left me-2"></i> Back';
                 backBtn.addEventListener('click', () => this.goBack());
-                document.getElementById('quick-questions').appendChild(backBtn);
+                quickQuestionsContainer.appendChild(backBtn);
+                
+                // Show input field
+                document.getElementById('user-input').style.display = 'block';
+                document.getElementById('send-btn').style.display = 'block';
+                document.getElementById('user-input').focus();
+                
             } else {
-                this.currentQuestions = question.children;
-                this.displayQuestions(question.children);
+                // Show answer if available
+                if (questionData.answer) {
+                    this.addMessage(
+                        questionData.answer, 
+                        'bot', 
+                        questionData.answer_type, 
+                        questionData.answer_data ? JSON.parse(questionData.answer_data) : null
+                    );
+                    this.logEvent('bot', questionData.answer, 'answer');
+                }
+                
+                // Show child questions if available
+                if (questionData.children && questionData.children.length > 0) {
+                    this.currentQuestions = questionData.children;
+                    this.displayQuestions(questionData.children);
+                } else {
+                    // No children - show back button
+                    quickQuestionsContainer.innerHTML = '';
+                    
+                    const backBtn = document.createElement('button');
+                    backBtn.className = 'question-btn btn btn-outline-secondary mb-2';
+                    backBtn.innerHTML = '<i class="fas fa-arrow-left me-2"></i> Back';
+                    backBtn.addEventListener('click', () => this.goBack());
+                    quickQuestionsContainer.appendChild(backBtn);
+                    
+                    this.currentQuestions = null;
+                }
             }
-        }
-    
-        // Show or hide input based on question
-        const inputEnabled = question.enable_input || false;
-        document.getElementById('user-input').style.display = inputEnabled ? 'block' : 'none';
-        document.getElementById('send-btn').style.display = inputEnabled ? 'block' : 'none';
-    
-        if (inputEnabled) {
-            document.getElementById('user-input').focus();
+            
+        } catch (error) {
+            console.error('Error handling question:', error);
+            this.addMessage("Sorry, I'm having trouble processing your request. Please try again.", 'bot');
+            
+            // Restore previous state
+            this.goBack();
         }
     }
-    
 
     async handleUserMessage() {
         const input = document.getElementById('user-input');
@@ -645,12 +666,6 @@ class ChatbotWidget {
             
             const data = await response.json();
 
-
-            // console.log(this.question_answer_after_input);
-
-            // this.addMessage(data.message, 'bot');
-
-            // Check if there are pending next questions
             if (this.pendingNextQuestions && this.pendingNextQuestions.length > 0) {
                 this.currentQuestions = this.pendingNextQuestions;
                 this.displayQuestions(this.pendingNextQuestions);
@@ -658,15 +673,22 @@ class ChatbotWidget {
             } else {
                 this.pendingNextQuestions = null;
                 if(this.question_answer_after_input){
-                    this.addMessage(this.question_answer_after_input || "Chat message saved successfully", 'bot');
-                    this.logEvent('bot', this.question_answer_after_input || "Chat message saved successfully", 'final_answer');
+                    this.addMessage(
+                        this.question_answer_after_input, 
+                        'bot',
+                        'simple'
+                    );
+                    this.logEvent('bot', this.question_answer_after_input, 'final_answer');
                 }
                 else{
-                    this.addMessage(data.message || "Chat message saved successfully", 'bot');
+                    this.addMessage(
+                        data.message || "Chat message saved successfully", 
+                        'bot',
+                        'simple'
+                    );
                     this.logEvent('bot', data.message || "Chat message saved successfully", 'final_answer');
                 }
                 
-
                 document.getElementById('quick-questions').innerHTML = '';
     
                 const backBtn = document.createElement('button');
@@ -675,25 +697,134 @@ class ChatbotWidget {
                 backBtn.addEventListener('click', () => this.goBack());
                 document.getElementById('quick-questions').appendChild(backBtn);
             }
-
-
         } catch (error) {
             console.error('Error sending message:', error);
             this.addMessage("Sorry, I'm having trouble responding right now. Please try again later.", 'bot');
-
         }
     }
 
-    addMessage(text, sender) {
+    addMessage(answer, sender = 'bot', answerType = 'simple', answerData = null) {
+        if (!answer) return;
+        
         const messagesContainer = document.getElementById('chat-messages');
         const message = document.createElement('div');
         message.className = `message ${sender}-message`;
-        message.textContent = text;
+    
+        let content = '';
+        
+        
+
+        if (sender === 'bot') {
+            switch (answerType) {
+                case 'rich_text':
+                    content = `<div class="rich-text-content">${answer}</div>`;
+                    break;
+    
+                case 'file':
+                    if (answerData) {
+                        
+                        const baseUrl = this.API_URL+'/file/view/';
+                        const fileUrl = baseUrl + this.extractFileName(answerData.file_path || '');
+    
+                        // if (answerData.mime_type.startsWith('image/')) {
+                        //     content = `<div class="text-center">
+                        //         <img src="${fileUrl}" class="img-fluid rounded" alt="Image preview">
+                        //     </div>`;
+                        // }
+                        
+                        console.log('Attempting to load file from:', fileUrl); // Debug log
+
+                    if (answerData.mime_type.startsWith('image/')) {
+                        // Create a temporary image to test loading
+                        const testImg = new Image();
+                        testImg.src = fileUrl;
+                        
+                        testImg.onload = () => {
+                            // If image loads successfully, update the content
+                            message.innerHTML = `
+                                <div class="text-center">
+                                    <img src="${fileUrl}" 
+                                         class="img-fluid rounded" 
+                                         alt="Image preview">
+                                </div>
+                            `;
+                        };
+                        
+                        testImg.onerror = () => {
+                            // If image fails to load, show error message
+                            message.innerHTML = `
+                                <div class="alert alert-warning">
+                                    Image failed to load. 
+                                    <a href="${fileUrl}" target="_blank">Open in new tab</a>
+                                </div>
+                            `;
+                        };
+                        
+                        // Show loading placeholder immediately
+                        content = `
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading image...</span>
+                                </div>
+                                <p>Loading image...</p>
+                            </div>
+                        `;
+                    }
+                        else if (answerData.mime_type.startsWith('video/')) {
+                            content = `<div class="ratio ratio-16x9">
+                                <video controls>
+                                    <source src="${fileUrl}" type="${answerData.mime_type}">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>`;
+                        }
+                        else if (answerData.mime_type.startsWith('application/pdf')) {
+                            content = `<div class="text-center">
+                                <i class="fas fa-file-pdf fa-3x text-danger"></i><br>
+                                <a href="${fileUrl}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">View PDF</a>
+                            </div>`;
+                        }
+                        else {
+                            content = `<div class="text-center">
+                                <i class="fas fa-file-alt fa-3x"></i><br>
+                                <a href="${fileUrl}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">Download File</a>
+                            </div>`;
+                        }
+                    } else {
+                        content = `<p>No file available.</p>`;
+                    }
+                    break;
+    
+                case 'youtube':
+                    if (answerData) {
+                        content = `<div class="ratio ratio-16x9">
+                            <iframe src="${answerData.embed_url}" 
+                                frameborder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen>
+                            </iframe>
+                        </div>`;
+                    } else {
+                        content = `<p>No YouTube video available.</p>`;
+                    }
+                    break;
+    
+                default:
+                    content = `<p>${answer}</p>`;
+            }
+        } else {
+            content = `<p>${answer}</p>`;
+        }
+    
+        message.innerHTML = content;
         messagesContainer.appendChild(message);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
-
+    extractFileName(path) {
+        return path.split('/').pop();
+    }
+    
     async logEvent(sender, message, type = null, parent_id = null) {
         try {
             await fetch(this.API_URL + '/api/chat/log', {
@@ -735,33 +866,43 @@ class ChatbotWidget {
         }
     }
 
-
+    async getLocationFromIp() {
+        try {
+            const response = await fetch("http://ip-api.com/json/");
+            const data = await response.json();
+            return {
+                ip: data.query,
+                city: data.city,
+                region: data.regionName,
+                country: data.country,
+                lat: data.lat,
+                lon: data.lon
+            };
+        } catch (error) {
+            console.error("Error fetching location:", error);
+            return null;
+        }
+    }
 }
 
-// Initialize when script is loaded
 document.addEventListener('DOMContentLoaded', function() {
     try {
-        // 1. Get the chatbot container
         const container = document.getElementById('chatbot-container');
         
         if (!container) {
             throw new Error('Chatbot container element not found');
         }
 
-        // 2. Get API key from data attribute
         const apiKey = container.dataset.key;
         
         if (!apiKey) {
             throw new Error('API key not found in data-key attribute');
         }
 
-        // 3. Initialize chatbot with the API key
         new ChatbotWidget(apiKey);
-
     } catch (error) {
         console.error('Chatbot initialization error:', error);
         
-        // Show error message
         const errorDiv = document.createElement('div');
         errorDiv.className = 'alert alert-danger position-fixed bottom-0 end-0 m-3';
         errorDiv.style.zIndex = '1100';
@@ -771,7 +912,6 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         document.body.appendChild(errorDiv);
         
-        // Auto-remove after 10 seconds
         setTimeout(() => {
             errorDiv.remove();
         }, 10000);

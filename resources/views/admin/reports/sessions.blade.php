@@ -21,28 +21,40 @@
                         <tr>
                             <th>Session ID</th>
                             <th>User</th>
+                            <th>Email</th>
                             <th>Start Time</th>
                             <th>Duration</th>
-                            <th>Messages</th>
+                            <th>Chats</th>
                             <th>Location</th>
                             <th>Device</th>
                             <th>API Key</th>
                         </tr>
                     </thead>
                     <tbody>
+                        
                         @foreach($sessions as $session)
                         <tr>
                             <td>{{ $session->id }}</td>
                             <td>{{ $session->user_name }}</td>
+                            <td> {{ $session->user_email }}</td>
                             <td>{{ $session->created_at->format('M d, Y H:i') }}</td>
                             <td>
                                 @if($session->ended_at)
-                                    {{ $session->created_at->diff($session->ended_at)->format('%Hh %Im %Ss') }}
+                                {{ $session->created_at->diff($session->ended_at)->format('%Hh %Im %Ss') }}
+                                    
                                 @else
-                                    Active
+                                <span class="badge bg-success">Active</span>
                                 @endif
                             </td>
-                            <td>{{ $session->messages_count }}</td>
+                            <td>
+                               
+                               
+                                
+                                <a href="{{route('admin.dashboard.session_id', $session->id)}}" 
+                                class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i>  {{ $session->messages->count() }}
+                                </a>
+                            </td>
                             <td>{{ $session->location ?? 'Unknown' }}</td>
                             <td>{{ $session->device_type ?? 'Unknown' }}</td>
                             <td>{{ $session->apiKey->name ?? 'N/A' }}</td>
@@ -167,5 +179,19 @@ var chart = new Chart(ctx, {
         }
     }
 });
+
+// Initialize DataTable
+$(document).ready(function() {
+    $('.table').DataTable({
+        "order": [[2, "desc"]],
+        "pageLength": 10
+    });
+    
+    // Update real-time metrics every 5 seconds
+    // updateRealTimeMetrics();
+    // setInterval(updateRealTimeMetrics, 5000);
+});
+
+
 </script>
 @endpush

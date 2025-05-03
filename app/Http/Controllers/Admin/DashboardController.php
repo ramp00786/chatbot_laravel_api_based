@@ -87,7 +87,7 @@ class DashboardController extends Controller
         
         // Sessions chart data (last 30 days)
         $sessionsChart = $this->generateTimeSeriesData('sessions', 30);
-        $messagesChart = $this->generateTimeSeriesData('messages', 30);
+        $messagesChart = $this->generateTimeSeriesData_chat('messages', 30);
         
         // Engagement chart data
         $engagementChart = $this->generateEngagementData(30);
@@ -157,6 +157,42 @@ class DashboardController extends Controller
             'trafficSources',
             'recentSessions'
         ));
+    }
+
+    protected function generateTimeSeriesData_chat($type, $days = 30)
+    {
+        $user = auth()->user();
+        $endDate = Carbon::now();
+        $startDate = $endDate->copy()->subDays($days);
+        
+        $results = [];
+        $currentDate = $startDate->copy();
+        
+        while ($currentDate <= $endDate) {
+            $dateString = $currentDate->format('Y-m-d');
+            
+            if ($type === 'sessions') {
+                $count = ChatSession::whereHas('apiKey', function($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    })
+                    ->whereDate('created_at', $currentDate)
+                    ->count();
+            } else { // messages - now using ChatLog
+                $count = ChatLog::whereHas('chatSession.apiKey', function($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    })
+                    ->whereDate('created_at', $currentDate)
+                    ->count();
+            }
+            
+            $results[$dateString] = $count;
+            $currentDate->addDay();
+        }
+        
+        return [
+            'labels' => array_keys($results),
+            'data' => array_values($results)
+        ];
     }
     
     protected function generateTimeSeriesData($type, $days = 30)
@@ -250,7 +286,7 @@ class DashboardController extends Controller
         if ($chart === 'sessionsChart') {
             $data = $this->generateTimeSeriesData('sessions', $days);
         } elseif ($chart === 'messagesChart') {
-            $data = $this->generateTimeSeriesData('messages', $days);
+            $data = $this->generateTimeSeriesData_chat('messages', $days);
         }
         
         return response()->json($data);
@@ -268,7 +304,7 @@ class DashboardController extends Controller
     {
         $data = [
             'sessions' => $this->generateTimeSeriesData('sessions', $days),
-            'messages' => $this->generateTimeSeriesData('messages', $days),
+            'messages' => $this->generateTimeSeriesData_chat('messages', $days),
             // Add other chart data as needed
         ];
         

@@ -21,10 +21,19 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
+    public function redirectToDashboard()
+    {
+        return redirect('dashboard');
+        // return view('home');
+    }
+
     public function index()
     {
+        // return redirect('dashboard');
         return view('home');
     }
+
+
 
     public function chatbot(){
 

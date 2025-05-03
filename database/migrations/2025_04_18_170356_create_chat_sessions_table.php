@@ -21,6 +21,7 @@ return new class extends Migration
             $table->text('user_agent');
             $table->string('device_type');
             $table->string('location')->nullable();
+            $table->string('last_column_name')->nullable();
             $table->timestamp('started_at');
             $table->timestamp('ended_at')->nullable();
             $table->timestamps();

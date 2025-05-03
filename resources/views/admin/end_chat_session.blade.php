@@ -15,7 +15,7 @@
 @push('scripts')
     <script>
         const output = document.getElementById('output');
-        const eventSource = new EventSource('/stream-end-inactive-sessions');
+        const eventSource = new EventSource(`{{ url('/stream-end-inactive-sessions') }}`);
 
         eventSource.onmessage = function(event) {
             output.textContent += event.data + '\n';
