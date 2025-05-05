@@ -164,6 +164,74 @@ class ChatbotWidget {
     injectStyles() {
         const style = document.createElement('style');
         style.textContent = `
+            .text-decoration-none{
+                text-decoration: none;
+            }
+            .apply-btn {
+                width: 160px;
+                height: 30px;
+                background: linear-gradient(135deg, #4A89DC, #38B2AC); /* Blue to Teal */
+                border: none;
+                border-radius: 12px;
+                color: white;
+                font-family: 'Segoe UI', sans-serif;
+                font-size: 13px;
+                font-weight: 600;
+                position: relative;
+                overflow: hidden;
+                cursor: pointer;
+                box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                margin-bottom: 10px;
+                animation: shadowPulse 1.5s ease-in-out infinite;
+            }
+
+            .icon {
+                display: inline-block;
+                font-size: 24px;
+                transition: transform 0.3s ease;
+            }
+
+            .icon.cap {
+                animation: bounceCap 1.5s ease-in-out infinite;
+            }
+
+            .icon.doc {
+                opacity: 0;
+                transform: translateX(20px);
+                animation: slideInDoc 1.5s ease-in-out infinite;
+                animation-delay: 0.3s;
+            }
+
+            .text {
+                animation: pulseText 1.5s ease-in-out infinite;
+            }
+
+            /* Keyframes */
+            @keyframes bounceCap {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-3px); }
+            }
+
+            @keyframes slideInDoc {
+                0% { opacity: 0; transform: translateX(20px); }
+                50% { opacity: 1; transform: translateX(0); }
+                100% { opacity: 0; transform: translateX(20px); }
+            }
+
+            @keyframes pulseText {
+                0%, 100% { opacity: 0.9; }
+                50% { opacity: 1; }
+            }
+
+            @keyframes shadowPulse {
+                0%, 100% { box-shadow: 0 6px 12px rgba(0,0,0,0.1); }
+                50% { box-shadow: 0 8px 16px rgba(0,0,0,0.15); }
+            }
+        
             #chatbot-widget-container {
                 position: fixed;
                 bottom: 20px;
@@ -274,8 +342,7 @@ class ChatbotWidget {
     }
 
     async startChat() {
-        const location = await this.getLocationFromIp();
-        console.log(location);
+       
 
         const nameInput = document.getElementById('user-name');
         const emailInput = document.getElementById('user-email');
@@ -296,16 +363,36 @@ class ChatbotWidget {
         document.getElementById('start-chat-spinner').classList.remove('d-none');
         document.getElementById('start-chat-btn').disabled = true;
 
-        this.userData = {
-            name: nameInput.value.trim(),
-            email: emailInput.value.trim(),
-            mobile: document.getElementById('user-mobile').value.trim(),
-            ip_address:location.ip,
-            location:location.city,
-            location_json:JSON.stringify(location)
-        };
+        
 
         try {
+            const location = await this.getLocationFromIp();
+            // console.log(location);
+
+            if(location){
+                this.userData = {
+                    name: nameInput.value.trim(),
+                    email: emailInput.value.trim(),
+                    mobile: document.getElementById('user-mobile').value.trim(),
+                    ip_address:location.ip,
+                    location:location.city,
+                    location_json:JSON.stringify(location)
+                };
+            }
+            else{
+                this.userData = {
+                    name: nameInput.value.trim(),
+                    email: emailInput.value.trim(),
+                    mobile: document.getElementById('user-mobile').value.trim(),
+                    ip_address:null,
+                    location:null,
+                    location_json:JSON.stringify(location)
+                };
+            }
+
+            
+
+
             const response = await fetch(this.API_URL+'/api/chat/sessions', {
                 method: 'POST',
                 headers: {
@@ -818,6 +905,24 @@ class ChatbotWidget {
     
         message.innerHTML = content;
         messagesContainer.appendChild(message);
+
+        // This message will appear after each message
+        if(sender !== 'bot'){
+            const DefaultMsgAllTime = document.createElement('div');
+            DefaultMsgAllTime.innerHTML = `
+            <a target="_blank" href="https://studentportal.srmu.ac.in/" class="text-decoration-none">
+                <button class="apply-btn">
+                    <span class="icon cap">🎓</span>
+                    <span class="text">Apply Now</span>
+                    <span class="icon doc">←</span>
+                </button>
+            </a>`;
+            messagesContainer.appendChild(DefaultMsgAllTime);
+        }
+        
+        // ../This message will appear after each message
+        
+
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
@@ -879,7 +984,7 @@ class ChatbotWidget {
                 lon: data.lon
             };
         } catch (error) {
-            console.error("Error fetching location:", error);
+            console.log("Error fetching location:", error);
             return null;
         }
     }

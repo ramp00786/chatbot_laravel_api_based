@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\UploadQuestionCSVController;
 use App\Http\Controllers\EndChatSessionController;
+use App\Http\Controllers\Admin\ChatbotQuestionImportController;
 use App\Models\ChatbotQuestion;
 use App\Http\Controllers\FileController;
 
@@ -136,6 +137,13 @@ Route::prefix('admin')->group(function() {
     
 
     
+});
+
+
+Route::middleware(['auth', 'admin.email'])->group(function () {
+    // Chatbot question import routes
+    Route::get('/chatbot/import', [ChatbotQuestionImportController::class, 'showImportForm'])->name('chatbot.import.form');
+    Route::post('/chatbot/import', [ChatbotQuestionImportController::class, 'import'])->name('chatbot.import');
 });
 
 

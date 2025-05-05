@@ -68,9 +68,10 @@ class ChatbotApiController extends Controller
 
         $questions = ChatbotQuestion::where('user_id', $apiKey->user_id)
             ->whereNull('parent_id')
+            ->orderBy('id')
             ->with(['children' => function($query) {
                 $query->with('children');
-            }])
+            }])            
             ->get();
 
         return response()->json($questions);
@@ -84,8 +85,9 @@ class ChatbotApiController extends Controller
 
         $question = ChatbotQuestion::where('user_id', $apiKey->user_id)
             ->with(['children' => function($query) {
-                $query->with('children');
+                $query->orderBy('id')->with('children');
             }])
+            
             ->findOrFail($id);
 
         return response()->json($question);

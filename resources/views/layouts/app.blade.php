@@ -42,6 +42,13 @@
                     <li class="nav-item">
                         <a class="nav-link {{ Route::is('admin.end-inactive-sessions') ? 'active' : '' }}" href="{{ route('admin.end-inactive-sessions') }}">End inactive sessions</a>
                     </li>
+                    @if(Auth::user()->email === "pratibhasahu9713@gmail.com")
+                    <li class="nav-item">
+                        <a class="nav-link {{ Route::is('admin.end-inactive-sessions') ? 'active' : '' }}" href="{{ route('chatbot.import.form') }}">
+                            <i class="fas fa-file-import"></i> Import Questions
+                        </a>
+                    </li>
+                    @endif
 
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
